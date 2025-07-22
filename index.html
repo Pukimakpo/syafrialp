@@ -8,14 +8,24 @@
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
 <body class="bg-gray-900 text-white">
-  <div class="min-h-screen flex flex-col md:flex-row">
+  <div id="loginPage" class="min-h-screen flex items-center justify-center">
+    <div class="bg-gray-800 p-8 rounded shadow-md w-full max-w-md">
+      <h2 class="text-2xl font-bold mb-4">🔐 Login</h2>
+      <input id="loginUser" placeholder="Username" class="w-full p-2 bg-gray-700 rounded mb-2">
+      <input id="loginPass" type="password" placeholder="Password" class="w-full p-2 bg-gray-700 rounded mb-4">
+      <button onclick="login()" class="bg-blue-600 px-4 py-2 rounded w-full">Login</button>
+      <p id="loginStatus" class="mt-4 text-red-400"></p>
+    </div>
+  </div>
+
+  <div id="mainApp" class="hidden min-h-screen flex flex-col md:flex-row">
     <!-- Sidebar -->
     <div class="w-full md:w-64 bg-gray-800 p-6">
       <h1 class="text-2xl font-bold mb-6">⚔️ Sayfraial</h1>
       <nav class="space-y-4">
-        <button onclick="showPage('dashboard')" class="w-full text-left">📊 Dashboard</button>
+        <button onclick="showPage('dashboard')" class="w-full text-left" id="nav-dashboard">📊 Dashboard</button>
         <button onclick="showPage('attack')" class="w-full text-left">🚀 Attack</button>
-        <button onclick="showPage('admin')" class="w-full text-left">🛠️ Admin</button>
+        <button onclick="showPage('admin')" class="w-full text-left hidden" id="nav-admin">🛠️ Admin</button>
         <button onclick="showPage('owner')" class="w-full text-left">👑 Owner</button>
       </nav>
     </div>
@@ -44,13 +54,13 @@
             <option>-- Method --</option>
           </select>
 
-          <button onclick="launchAttack()" class="bg-red-600 px-4 py-2 rounded"> attack ye</button>
+          <button onclick="launchAttack()" class="bg-red-600 px-4 py-2 rounded">🔥 Fire</button>
           <pre id="result" class="mt-4 text-green-400"></pre>
         </div>
       </div>
 
       <div id="admin" class="hidden">
-        <h2 class="text-3xl font-bold mb-4">admin Panel</h2>
+        <h2 class="text-3xl font-bold mb-4">🛠️ Admin Panel</h2>
         <input id="newUser" placeholder="Username" class="w-full p-2 bg-gray-700 rounded mb-2">
         <input id="newPass" placeholder="Password" class="w-full p-2 bg-gray-700 rounded mb-2">
         <input id="conc" type="number" placeholder="Max Concurrents" class="w-full p-2 bg-gray-700 rounded mb-2">
@@ -62,16 +72,18 @@
 
       <div id="owner" class="hidden">
         <h2 class="text-3xl font-bold mb-4">👑 Owner</h2>
-        <p>Panel ini dikelola oleh <strong>syafrail/strong>, seorang developer penuh semangat dan berdedikasi.</p>
+        <p>Panel ini dikelola oleh <strong>Sayfraial</strong>, seorang developer penuh semangat dan berdedikasi.</p>
       </div>
     </div>
   </div>
 
   <script>
     const methods = {
-      layer4: ["udp"],
-      layer7: ["kalimasada"]
+      layer4: ["udp", "dns", "tcp", "fivem", "minecraft", "ovh-amp", "vse"],
+      layer7: ["kalimasada", "tls", "trump", "tlsx", "bypass", "h2-blast", "https"]
     };
+
+    let isAdmin = false;
 
     function showPage(page) {
       ['dashboard', 'attack', 'admin', 'owner'].forEach(p => {
@@ -125,8 +137,27 @@
         });
     }
 
-    // Default load dashboard
-    showPage('dashboard');
+    function login() {
+      const user = document.getElementById('loginUser').value;
+      const pass = document.getElementById('loginPass').value;
+      axios.post('http://localhost:3000/api/login', { user, pass })
+        .then(res => {
+          isAdmin = res.data.isAdmin;
+          document.getElementById('loginPage').classList.add('hidden');
+          document.getElementById('mainApp').classList.remove('hidden');
+          if (isAdmin) {
+            document.getElementById('nav-admin').classList.remove('hidden');
+            document.getElementById('nav-dashboard').classList.remove('hidden');
+          } else {
+            document.getElementById('nav-admin').classList.add('hidden');
+            document.getElementById('nav-dashboard').classList.add('hidden');
+          }
+          showPage('attack');
+        })
+        .catch(err => {
+          document.getElementById('loginStatus').textContent = '❌ Login gagal';
+        });
+    }
   </script>
 </body>
 </html>
