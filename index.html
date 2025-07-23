@@ -2,190 +2,137 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Sayfraial Stresser Panel</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sayfraial Stresser</title>
   <style>
     body {
-      margin: 0;
-      font-family: Arial, sans-serif;
       background: #111;
       color: #fff;
-    }
-
-    .container {
-      max-width: 500px;
-      margin: 40px auto;
+      font-family: Arial, sans-serif;
+      margin: 0;
       padding: 20px;
-      background: #1e1e1e;
-      border-radius: 10px;
     }
-
-    h1, h2 {
-      text-align: center;
-      color: #0f0;
-    }
-
     input, select, button {
-      width: 100%;
       padding: 10px;
-      margin-top: 10px;
-      border-radius: 5px;
-      border: none;
-      font-size: 16px;
+      margin: 5px;
+      background: #222;
+      color: #fff;
+      border: 1px solid #555;
     }
-
-    button {
-      background-color: #0f0;
-      color: #000;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    .hidden {
-      display: none;
-    }
-
-    .link {
-      color: #0f0;
-      text-align: center;
-      cursor: pointer;
-      margin-top: 10px;
-    }
-
-    .section {
-      margin-top: 30px;
-    }
-
-    .admin-section {
+    .hidden { display: none; }
+    .panel {
+      border: 1px solid #444;
+      padding: 20px;
       margin-top: 20px;
-      padding-top: 10px;
-      border-top: 1px solid #333;
     }
   </style>
 </head>
 <body>
+  <h1>💥 Sayfraial Web Stresser</h1>
+  <div id="loginPanel">
+    <h2>Login</h2>
+    <input id="username" placeholder="Username"/><br/>
+    <input id="password" placeholder="Password" type="password"/><br/>
+    <button onclick="login()">Login</button>
+    <p>or <a href="#" onclick="showRegister()">Sign Up</a></p>
+  </div>
 
-  <div class="container">
-    <h1>Sayfraial Stresser</h1>
+  <div id="registerPanel" class="hidden">
+    <h2>Register</h2>
+    <input id="regUser" placeholder="Username"/><br/>
+    <input id="regPass" placeholder="Password" type="password"/><br/>
+    <button onclick="register()">Sign Up</button>
+    <p><a href="#" onclick="showLogin()">Back to Login</a></p>
+  </div>
 
-    <!-- Login Section -->
-    <div id="loginSection">
-      <input id="loginUser" placeholder="Username" />
-      <input id="loginPass" type="password" placeholder="Password" />
-      <button onclick="login()">Login</button>
-      <div class="link" onclick="toggleView('registerSection')">Belum punya akun? Register</div>
-    </div>
-
-    <!-- Register Section -->
-    <div id="registerSection" class="hidden">
-      <input id="regUser" placeholder="New Username" />
-      <input id="regPass" type="password" placeholder="New Password" />
-      <input id="captcha" placeholder="Apa hasil 3 + 2?" />
-      <button onclick="register()">Register</button>
-      <div class="link" onclick="toggleView('loginSection')">Sudah punya akun? Login</div>
-    </div>
-
-    <!-- Dashboard -->
-    <div id="dashboard" class="hidden">
-      <h2>Attack Panel</h2>
-      <input id="target" placeholder="Target (example.com)" />
+  <div id="mainPanel" class="hidden">
+    <h2>Attack Panel</h2>
+    <div class="panel">
+      <input id="target" placeholder="Target URL or IP"/>
       <select id="method">
-        <option value="GET">GET</option>
-        <option value="POST">POST</option>
+        <option>L7</option>
+        <option>L4</option>
       </select>
-      <input id="duration" type="number" placeholder="Duration (seconds)" />
-      <button onclick="attack()">Start Attack</button>
-
-      <!-- Admin Tools -->
-      <div id="adminPanel" class="admin-section hidden">
-        <h3>Admin: Add User</h3>
-        <input id="newUser" placeholder="New Username" />
-        <input id="newPass" placeholder="New Password" />
-        <input id="newLimit" type="number" placeholder="Limit (e.g., 10)" />
-        <input id="newTime" type="number" placeholder="Time (sec)" />
-        <input id="newExpires" type="date" placeholder="Expires" />
-        <button onclick="addUser()">Create User</button>
-      </div>
+      <input id="attackTime" type="number" placeholder="Time (sec)"/>
+      <button onclick="attack()">Attack</button>
     </div>
+
+    <div id="adminPanel" class="panel hidden">
+      <h3>Admin - Add User</h3>
+      <input id="newUser" placeholder="New Username"/>
+      <input id="newPass" placeholder="Password"/>
+      <input id="limit" type="number" placeholder="Concurrents"/>
+      <input id="timeLimit" type="number" placeholder="Time limit (s)"/>
+      <input id="expires" type="date"/>
+      <button onclick="createUser()">Add/Update User</button>
+    </div>
+
+    <p><button onclick="logout()">Logout</button></p>
   </div>
 
   <script>
-    const BASE = 'https://hospitable-bravery-production.up.railway.app'; // Ganti jika backend berubah
-    let currentUser = '';
-    let currentPass = '';
-    let isAdmin = false;
+    const BASE = 'https://hospitable-bravery-production.up.railway.app';
+    let currentUser = '', currentPass = '', isAdmin = false;
 
-    function toggleView(section) {
-      ['loginSection', 'registerSection', 'dashboard'].forEach(id => {
-        document.getElementById(id).classList.add('hidden');
-      });
-      document.getElementById(section).classList.remove('hidden');
+    function showLogin() {
+      document.getElementById('loginPanel').classList.remove('hidden');
+      document.getElementById('registerPanel').classList.add('hidden');
+    }
+
+    function showRegister() {
+      document.getElementById('registerPanel').classList.remove('hidden');
+      document.getElementById('loginPanel').classList.add('hidden');
     }
 
     function login() {
-      const username = document.getElementById('loginUser').value.trim();
-      const password = document.getElementById('loginPass').value.trim();
-      if (!username || !password) return alert('Harap isi semua field');
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
 
       fetch(BASE + '/api/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({ username, password })
       })
       .then(res => res.json())
-      .then(res => {
-        if (res.error) return alert(res.error);
+      .then(data => {
+        if (data.error) return alert(data.error);
         currentUser = username;
         currentPass = password;
-        isAdmin = res.admin;
-        toggleView('dashboard');
-        if (isAdmin) document.getElementById('adminPanel').classList.remove('hidden');
-        alert('Login berhasil');
+        isAdmin = data.admin;
+        document.getElementById('loginPanel').classList.add('hidden');
+        document.getElementById('mainPanel').classList.remove('hidden');
+        if (isAdmin) {
+          document.getElementById('adminPanel').classList.remove('hidden');
+        }
       });
     }
 
     function register() {
-      const username = document.getElementById('regUser').value.trim();
-      const password = document.getElementById('regPass').value.trim();
-      const captcha = document.getElementById('captcha').value.trim();
-      if (!username || !password || captcha !== '5') return alert('Isi semua field dan captcha benar');
+      const username = document.getElementById('regUser').value;
+      const password = document.getElementById('regPass').value;
 
       fetch(BASE + '/api/register', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({ username, password })
       })
       .then(res => res.json())
-      .then(res => alert(res.message || res.error));
+      .then(data => {
+        alert(data.message || data.error);
+        if (data.message) showLogin();
+      });
     }
 
-    function attack() {
-      const target = document.getElementById('target').value.trim();
-      const method = document.getElementById('method').value;
-      const time = parseInt(document.getElementById('duration').value);
-      if (!target || !time) return alert('Isi semua field');
-
-      fetch(BASE + '/api/attack', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: currentUser, password: currentPass, target, method, time })
-      })
-      .then(res => res.json())
-      .then(res => alert(res.message || res.error));
-    }
-
-    function addUser() {
-      const newUser = document.getElementById('newUser').value.trim();
-      const newPass = document.getElementById('newPass').value.trim();
-      const limit = parseInt(document.getElementById('newLimit').value);
-      const time = parseInt(document.getElementById('newTime').value);
-      const expires = document.getElementById('newExpires').value;
-
-      if (!newUser || !newPass || !limit || !time || !expires) return alert('Isi semua field');
+    function createUser() {
+      const newUser = document.getElementById('newUser').value;
+      const newPass = document.getElementById('newPass').value;
+      const limit = +document.getElementById('limit').value;
+      const time = +document.getElementById('timeLimit').value;
+      const expires = document.getElementById('expires').value;
 
       fetch(BASE + '/api/create-user', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
           adminUser: currentUser,
           adminPass: currentPass,
@@ -197,9 +144,28 @@
         })
       })
       .then(res => res.json())
-      .then(res => alert(res.message || res.error));
+      .then(data => {
+        alert(data.message || data.error);
+      });
+    }
+
+    function attack() {
+      const target = document.getElementById('target').value;
+      const method = document.getElementById('method').value;
+      const time = +document.getElementById('attackTime').value;
+
+      fetch(BASE + '/api/attack', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ username: currentUser, password: currentPass, target, method, time })
+      })
+      .then(res => res.json())
+      .then(data => alert(data.message || data.error));
+    }
+
+    function logout() {
+      location.reload();
     }
   </script>
-
 </body>
 </html>
