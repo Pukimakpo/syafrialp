@@ -2,48 +2,159 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Syafrial Stresser</title>
-  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+    }
+
+    input, select, button {
+      margin: 5px;
+      padding: 10px;
+      border-radius: 5px;
+      border: none;
+      outline: none;
+    }
+
+    button {
+      background-color: #2196f3;
+      color: white;
+      cursor: pointer;
+    }
+
+    #login-container, #dashboard {
+      background: #222;
+      padding: 2rem;
+      border-radius: 10px;
+      width: 300px;
+    }
+
+    #admin-panel {
+      margin-top: 20px;
+      border-top: 1px solid #555;
+      padding-top: 10px;
+    }
+
+    h2, h3 {
+      color: #4caf50;
+    }
+  </style>
 </head>
 <body>
-  <div id="app">
-    <div id="login">
-      <h2>Login</h2>
-      <input type="text" id="username" placeholder="Username">
-      <input type="password" id="password" placeholder="Password">
-      <button onclick="login()">Login</button>
+  <div id="login-container">
+    <h2>Login Panel</h2>
+    <input type="text" id="username" placeholder="Username"/>
+    <input type="password" id="password" placeholder="Password"/>
+    <button onclick="login()">Login</button>
+    <p id="login-error"></p>
+  </div>
+
+  <div id="dashboard" style="display: none;">
+    <h2>Dashboard - Welcome <span id="user-role"></span></h2>
+    <div id="attack-panel">
+      <h3>Attack Page</h3>
+      <input type="text" id="target" placeholder="Target (IP/Host)"/>
+      <input type="number" id="duration" placeholder="Duration (s)"/>
+      <select id="method">
+        <option value="L4">L4</option>
+        <option value="L7">L7</option>
+      </select>
+      <button onclick="launchAttack()">Launch</button>
     </div>
 
-    <div id="dashboard" style="display: none;">
-      <h2>Dashboard</h2>
-      <p id="userInfo"></p>
+    <div id="admin-panel" style="display: none;">
+      <h3>Admin: Manage Users</h3>
+      <input type="text" id="new-username" placeholder="Username"/>
+      <input type="text" id="new-password" placeholder="Password"/>
+      <input type="number" id="new-conc" placeholder="Concurrent"/>
+      <input type="number" id="new-time" placeholder="Max Time (s)"/>
+      <input type="date" id="new-expire" />
+      <button onclick="addUser()">Add User</button>
+
+      <input type="text" id="del-username" placeholder="Username to delete"/>
+      <button onclick="deleteUser()">Delete User</button>
+    </div>
+
+    <div style="margin-top: 20px;">
+      <h3>Logout</h3>
       <button onclick="logout()">Logout</button>
-
-      <div id="adminPanel" style="display: none;">
-        <h3>Admin Panel</h3>
-        <input id="newUser" placeholder="New Username">
-        <input id="newPass" placeholder="New Password">
-        <input id="newLimit" placeholder="Concurrents">
-        <input id="newTime" placeholder="Max Time (sec)">
-        <input id="newDays" placeholder="Active Days">
-        <button onclick="addUser()">Add User</button>
-        <input id="delUser" placeholder="Username to delete">
-        <button onclick="deleteUser()">Delete User</button>
-      </div>
-
-      <div id="attackPanel">
-        <h3>Attack Panel</h3>
-        <input id="target" placeholder="Target URL">
-        <input id="duration" placeholder="Duration">
-        <select id="method">
-          <option value="https">HTTPS</option>
-          <option value="udp">UDP</option>
-        </select>
-        <button onclick="attack()">Attack</button>
-      </div>
     </div>
   </div>
-  <script src="script.js"></script>
+
+  <script>
+    let user = null;
+    const api = "https://hospitable-bravery-production.up.railway.app"; // Ganti kalau perlu
+
+    function login() {
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value.trim();
+
+      fetch(`${api}/api/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.error) {
+            document.getElementById("login-error").innerText = data.error;
+            return;
+          }
+          user = data;
+          document.getElementById("login-container").style.display = "none";
+          document.getElementById("dashboard").style.display = "block";
+          document.getElementById("user-role").innerText = user.username;
+          if (user.isAdmin) {
+            document.getElementById("admin-panel").style.display = "block";
+          }
+        });
+    }
+
+    function logout() {
+      user = null;
+      document.getElementById("login-container").style.display = "block";
+      document.getElementById("dashboard").style.display = "none";
+      document.getElementById("admin-panel").style.display = "none";
+    }
+
+    function addUser() {
+      const u = document.getElementById("new-username").value;
+      const p = document.getElementById("new-password").value;
+      const c = parseInt(document.getElementById("new-conc").value);
+      const t = parseInt(document.getElementById("new-time").value);
+      const e = document.getElementById("new-expire").value;
+
+      fetch(`${api}/api/users`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: u, password: p, concurrent: c, time: t, expire: e }),
+      })
+        .then(res => res.json())
+        .then(data => alert(data.success ? "User Added!" : "Error"));
+    }
+
+    function deleteUser() {
+      const u = document.getElementById("del-username").value;
+      fetch(`${api}/api/users/${u}`, {
+        method: "DELETE"
+      })
+        .then(res => res.json())
+        .then(data => alert(data.success ? "User Deleted" : "Error"));
+    }
+
+    function launchAttack() {
+      const target = document.getElementById("target").value;
+      const duration = parseInt(document.getElementById("duration").value);
+      const method = document.getElementById("method").value;
+      alert(`Attack sent to ${target} for ${duration}s via ${method}`);
+    }
+  </script>
 </body>
 </html>
