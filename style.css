@@ -1,0 +1,21 @@
+body {
+  background-color: #111;
+  color: #eee;
+  font-family: sans-serif;
+  text-align: center;
+  margin: 0;
+  padding: 2rem;
+}
+input, select, button {
+  display: block;
+  margin: 0.5rem auto;
+  padding: 0.5rem;
+  font-size: 1rem;
+  width: 200px;
+}
+button {
+  background: #333;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+}
