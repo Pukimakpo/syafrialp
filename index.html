@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sayfraial Stresser</title>
   <style>
     body {
@@ -45,7 +46,6 @@
 <body>
   <div class="container">
     <h1>Sayfraial Stresser</h1>
-
     <div id="login" class="card">
       <h2>Login</h2>
       <input type="text" id="user" placeholder="Username" />
@@ -88,12 +88,13 @@
       <h2>Admin Panel</h2>
       <input type="text" id="newUser" placeholder="Username Baru" />
       <input type="text" id="newPass" placeholder="Password Baru" />
+      <input type="number" id="newLimit" placeholder="Time Limit (s)" />
+      <input type="number" id="newDays" placeholder="Masa Aktif (Hari)" />
       <button onclick="createUser()">Create User</button>
     </div>
   </div>
-
   <script>
-    const BASE = "https://hospitable-bravery-production.up.railway.app";
+    const BASE = 'https://hospitable-bravery-production.up.railway.app';
     let isAdmin = false;
 
     function login() {
@@ -101,13 +102,12 @@
       const pass = document.getElementById('pass').value;
 
       fetch(BASE + '/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user, pass })
       })
       .then(res => res.json())
       .then(data => {
-        if (!data.success) return alert('Login gagal');
+        if (!data.allowed) return alert('Belum di-approve oleh admin');
         document.getElementById('login').classList.add('hidden');
         document.getElementById('attack').classList.remove('hidden');
         document.getElementById('dashboard').classList.remove('hidden');
@@ -117,7 +117,7 @@
         }
         loadStats();
       })
-      .catch(() => alert('Login error'));
+      .catch(() => alert('Login gagal'));
     }
 
     function register() {
@@ -125,14 +125,11 @@
       const pass = document.getElementById('regPass').value;
       const captcha = document.getElementById('captcha').value;
       if (captcha != '7') return alert('Captcha salah');
-
       fetch(BASE + '/api/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user, pass })
       })
-      .then(res => res.json())
-      .then(() => alert('Daftar berhasil, tunggu approval admin'))
+      .then(() => alert('Berhasil daftar, tunggu approval admin'))
       .catch(() => alert('Gagal daftar'));
     }
 
@@ -169,34 +166,31 @@
       const port = document.getElementById('port').value;
       const time = document.getElementById('time').value;
       const method = document.getElementById('method').value;
-
       fetch(BASE + '/api/attack', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ target, port, time, method })
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user: document.getElementById('user').value, pass: document.getElementById('pass').value, target, port, time, method })
       })
       .then(res => res.json())
-      .then(data => alert('Attack sent'))
-      .catch(e => alert('Gagal'));
+      .then(data => alert('Attack sent: ' + JSON.stringify(data)))
+      .catch(e => alert('Error: ' + e.message));
     }
 
     function createUser() {
       if (!isAdmin) return alert('Bukan admin');
       const newUser = document.getElementById('newUser').value;
       const newPass = document.getElementById('newPass').value;
-
+      const limit = document.getElementById('newLimit').value;
+      const days = document.getElementById('newDays').value;
       fetch(BASE + '/api/create-user', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           adminUser: document.getElementById('user').value,
           adminPass: document.getElementById('pass').value,
-          newUser, newPass
+          newUser, newPass, limit, days
         })
       })
-      .then(res => res.json())
       .then(() => alert('User created'))
-      .catch(() => alert('Error'));
+      .catch(() => alert('Gagal create user'));
     }
 
     function loadStats() {
