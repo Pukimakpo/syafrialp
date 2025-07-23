@@ -3,157 +3,237 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Syafrial Stresser</title>
+  <title>Syafrial Stresser Panel</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #111;
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 2rem;
+      background: #0f0f0f;
+      color: #f1f1f1;
+      margin: 0;
+      padding: 0;
     }
-
+    .container {
+      width: 90%;
+      max-width: 700px;
+      margin: 50px auto;
+      background: #1a1a1a;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 20px #00ffbb44;
+    }
+    h2, h3 {
+      color: #00ffbb;
+    }
     input, select, button {
-      margin: 5px;
+      width: 100%;
       padding: 10px;
-      border-radius: 5px;
+      margin: 5px 0 15px;
       border: none;
-      outline: none;
+      border-radius: 5px;
     }
-
+    input, select {
+      background: #333;
+      color: #fff;
+    }
     button {
-      background-color: #2196f3;
-      color: white;
+      background: #00ffbb;
+      color: #000;
+      font-weight: bold;
       cursor: pointer;
     }
-
-    #login-container, #dashboard {
-      background: #222;
-      padding: 2rem;
-      border-radius: 10px;
-      width: 300px;
+    button:hover {
+      background: #00e6a0;
     }
-
-    #admin-panel {
-      margin-top: 20px;
-      border-top: 1px solid #555;
-      padding-top: 10px;
+    .section {
+      margin-top: 30px;
+      border-top: 1px solid #333;
+      padding-top: 20px;
     }
-
-    h2, h3 {
-      color: #4caf50;
+    .hidden {
+      display: none;
+    }
+    footer {
+      margin-top: 40px;
+      text-align: center;
+      color: #888;
     }
   </style>
 </head>
 <body>
-  <div id="login-container">
-    <h2>Login Panel</h2>
-    <input type="text" id="username" placeholder="Username"/>
-    <input type="password" id="password" placeholder="Password"/>
-    <button onclick="login()">Login</button>
-    <p id="login-error"></p>
-  </div>
-
-  <div id="dashboard" style="display: none;">
-    <h2>Dashboard - Welcome <span id="user-role"></span></h2>
-    <div id="attack-panel">
-      <h3>Attack Page</h3>
-      <input type="text" id="target" placeholder="Target (IP/Host)"/>
-      <input type="number" id="duration" placeholder="Duration (s)"/>
-      <select id="method">
-        <option value="L4">L4</option>
-        <option value="L7">L7</option>
-      </select>
-      <button onclick="launchAttack()">Launch</button>
+  <div class="container">
+    <div id="login-section">
+      <h2>🔐 Login Panel</h2>
+      <input type="text" id="login-username" placeholder="Username" />
+      <input type="password" id="login-password" placeholder="Password" />
+      <button onclick="login()">Login</button>
+      <small style="color:#888">Belum punya akun? <a href="#" onclick="showRegister()">Sign up</a></small>
     </div>
 
-    <div id="admin-panel" style="display: none;">
-      <h3>Admin: Manage Users</h3>
-      <input type="text" id="new-username" placeholder="Username"/>
-      <input type="text" id="new-password" placeholder="Password"/>
-      <input type="number" id="new-conc" placeholder="Concurrent"/>
-      <input type="number" id="new-time" placeholder="Max Time (s)"/>
-      <input type="date" id="new-expire" />
-      <button onclick="addUser()">Add User</button>
-
-      <input type="text" id="del-username" placeholder="Username to delete"/>
-      <button onclick="deleteUser()">Delete User</button>
+    <div id="register-section" class="hidden">
+      <h2>📝 Register</h2>
+      <input type="text" id="reg-username" placeholder="Username" />
+      <input type="password" id="reg-password" placeholder="Password" />
+      <button onclick="register()">Register</button>
+      <button onclick="showLogin()">Back to Login</button>
     </div>
 
-    <div style="margin-top: 20px;">
-      <h3>Logout</h3>
-      <button onclick="logout()">Logout</button>
+    <div id="dashboard" class="hidden">
+      <h2>📊 Dashboard - Welcome <span id="user-name"></span></h2>
+
+      <div class="section">
+        <h3>🚀 Attack</h3>
+        <input type="text" id="target" placeholder="Target IP or Host" />
+        <input type="number" id="duration" placeholder="Duration (seconds)" />
+        <select id="method">
+          <option value="L4">L4</option>
+          <option value="L7">L7</option>
+        </select>
+        <button onclick="launchAttack()">Launch Attack</button>
+      </div>
+
+      <div id="admin-section" class="section hidden">
+        <h3>🛠️ Admin Panel</h3>
+        <h4>Add User</h4>
+        <input type="text" id="new-username" placeholder="Username" />
+        <input type="text" id="new-password" placeholder="Password" />
+        <input type="number" id="new-conc" placeholder="Concurrency Limit" />
+        <input type="number" id="new-time" placeholder="Time Limit (seconds)" />
+        <input type="number" id="new-days" placeholder="Valid Days" />
+        <button onclick="addUser()">Add User</button>
+
+        <h4>Delete User</h4>
+        <input type="text" id="delete-user" placeholder="Username to Delete" />
+        <button onclick="deleteUser()">Delete User</button>
+      </div>
+
+      <div class="section">
+        <button onclick="logout()">Logout</button>
+      </div>
     </div>
+    <footer>
+      👤 Owner: <b>Syafrial</b> | 💬 Contact: <a href="https://t.me/sayfraial" target="_blank">@sayfraial</a>
+    </footer>
   </div>
 
   <script>
-    let user = null;
-    const api = "https://hospitable-bravery-production.up.railway.app"; // Ganti kalau perlu
+    const backend = 'https://hospitable-bravery-production.up.railway.app'; // Replace with your Railway backend
+
+    function showLogin() {
+      document.getElementById('login-section').classList.remove('hidden');
+      document.getElementById('register-section').classList.add('hidden');
+    }
+
+    function showRegister() {
+      document.getElementById('register-section').classList.remove('hidden');
+      document.getElementById('login-section').classList.add('hidden');
+    }
 
     function login() {
-      const username = document.getElementById("username").value.trim();
-      const password = document.getElementById("password").value.trim();
+      const username = document.getElementById('login-username').value;
+      const password = document.getElementById('login-password').value;
 
-      fetch(`${api}/api/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
+      fetch(`${backend}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
       })
         .then(res => res.json())
         .then(data => {
-          if (data.error) {
-            document.getElementById("login-error").innerText = data.error;
-            return;
-          }
-          user = data;
-          document.getElementById("login-container").style.display = "none";
-          document.getElementById("dashboard").style.display = "block";
-          document.getElementById("user-role").innerText = user.username;
-          if (user.isAdmin) {
-            document.getElementById("admin-panel").style.display = "block";
+          if (data.success) {
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('isAdmin', data.isAdmin);
+            document.getElementById('user-name').innerText = username;
+            document.getElementById('login-section').classList.add('hidden');
+            document.getElementById('dashboard').classList.remove('hidden');
+            if (data.isAdmin) {
+              document.getElementById('admin-section').classList.remove('hidden');
+            }
+          } else {
+            alert('Login failed!');
           }
         });
     }
 
-    function logout() {
-      user = null;
-      document.getElementById("login-container").style.display = "block";
-      document.getElementById("dashboard").style.display = "none";
-      document.getElementById("admin-panel").style.display = "none";
-    }
+    function register() {
+      const username = document.getElementById('reg-username').value;
+      const password = document.getElementById('reg-password').value;
 
-    function addUser() {
-      const u = document.getElementById("new-username").value;
-      const p = document.getElementById("new-password").value;
-      const c = parseInt(document.getElementById("new-conc").value);
-      const t = parseInt(document.getElementById("new-time").value);
-      const e = document.getElementById("new-expire").value;
-
-      fetch(`${api}/api/users`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: u, password: p, concurrent: c, time: t, expire: e }),
+      fetch(`${backend}/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
       })
         .then(res => res.json())
-        .then(data => alert(data.success ? "User Added!" : "Error"));
-    }
-
-    function deleteUser() {
-      const u = document.getElementById("del-username").value;
-      fetch(`${api}/api/users/${u}`, {
-        method: "DELETE"
-      })
-        .then(res => res.json())
-        .then(data => alert(data.success ? "User Deleted" : "Error"));
+        .then(data => {
+          if (data.success) {
+            alert('Registered! You can now login.');
+            showLogin();
+          } else {
+            alert('Failed to register.');
+          }
+        });
     }
 
     function launchAttack() {
-      const target = document.getElementById("target").value;
-      const duration = parseInt(document.getElementById("duration").value);
-      const method = document.getElementById("method").value;
-      alert(`Attack sent to ${target} for ${duration}s via ${method}`);
+      const token = localStorage.getItem('token');
+      const target = document.getElementById('target').value;
+      const duration = document.getElementById('duration').value;
+      const method = document.getElementById('method').value;
+
+      fetch(`${backend}/attack`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: token
+        },
+        body: JSON.stringify({ target, duration, method })
+      })
+        .then(res => res.json())
+        .then(data => {
+          alert(data.message || 'Attack sent!');
+        });
+    }
+
+    function addUser() {
+      const token = localStorage.getItem('token');
+      const username = document.getElementById('new-username').value;
+      const password = document.getElementById('new-password').value;
+      const conc = document.getElementById('new-conc').value;
+      const time = document.getElementById('new-time').value;
+      const days = document.getElementById('new-days').value;
+
+      fetch(`${backend}/admin/add-user`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: token
+        },
+        body: JSON.stringify({ username, password, conc, time, days })
+      })
+        .then(res => res.json())
+        .then(data => alert(data.message));
+    }
+
+    function deleteUser() {
+      const token = localStorage.getItem('token');
+      const username = document.getElementById('delete-user').value;
+
+      fetch(`${backend}/admin/delete-user`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: token
+        },
+        body: JSON.stringify({ username })
+      })
+        .then(res => res.json())
+        .then(data => alert(data.message));
+    }
+
+    function logout() {
+      localStorage.clear();
+      document.getElementById('dashboard').classList.add('hidden');
+      document.getElementById('login-section').classList.remove('hidden');
     }
   </script>
 </body>
