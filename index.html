@@ -1,163 +1,66 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Sayfraial Stresser</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <link rel="stylesheet" href="style.css"/>
 </head>
-<body class="bg-gray-900 text-white">
-  <div id="loginPage" class="min-h-screen flex items-center justify-center">
-    <div class="bg-gray-800 p-8 rounded shadow-md w-full max-w-md">
-      <h2 class="text-2xl font-bold mb-4">🔐 Login</h2>
-      <input id="loginUser" placeholder="Username" class="w-full p-2 bg-gray-700 rounded mb-2">
-      <input id="loginPass" type="password" placeholder="Password" class="w-full p-2 bg-gray-700 rounded mb-4">
-      <button onclick="login()" class="bg-blue-600 px-4 py-2 rounded w-full">Login</button>
-      <p id="loginStatus" class="mt-4 text-red-400"></p>
+<body>
+  <div class="container">
+    <h1>Sayfraial Stresser</h1>
+
+    <!-- Login Card -->
+    <div id="login" class="card">
+      <h2>Login</h2>
+      <input type="text" id="user" placeholder="Username" />
+      <input type="password" id="pass" placeholder="Password" />
+      <button onclick="login()">Login</button>
+      <p class="link-small" onclick="showRegister()">Sign up</p>
+    </div>
+
+    <!-- Register Card -->
+    <div id="register" class="card hidden">
+      <h2>Register</h2>
+      <input type="text" id="regUser" placeholder="Username" />
+      <input type="password" id="regPass" placeholder="Password" />
+      <input type="text" id="captcha" placeholder="What is 3 + 4?" />
+      <button onclick="register()">Register</button>
+      <p class="link-small" onclick="showLogin()">Back to login</p>
+    </div>
+
+    <!-- Attack Panel -->
+    <div id="attack" class="card hidden">
+      <h2>Attack Panel</h2>
+      <input type="text" id="target" placeholder="Target URL/IP" />
+      <input type="number" id="port" placeholder="Port" />
+      <input type="number" id="time" placeholder="Duration (s)" />
+      <select id="layer" onchange="loadMethods()">
+        <option value="">-- Pilih Layer --</option>
+        <option value="layer4">L4</option>
+        <option value="layer7">L7</option>
+      </select>
+      <select id="method"></select>
+      <button onclick="sendAttack()">🚀 Attack</button>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboard" class="card hidden">
+      <h2>📊 Dashboard</h2>
+      <p id="stat-now">Attack Aktif: </p>
+      <p id="stat-today">Hari Ini: </p>
+      <p id="stat-month">Bulan Ini: </p>
+    </div>
+
+    <!-- Admin Panel -->
+    <div id="admin" class="card hidden">
+      <h2>Admin Panel</h2>
+      <input type="text" id="newUser" placeholder="Username Baru" />
+      <input type="text" id="newPass" placeholder="Password Baru" />
+      <button onclick="createUser()">Create User</button>
     </div>
   </div>
 
-  <div id="mainApp" class="hidden min-h-screen flex flex-col md:flex-row">
-    <!-- Sidebar -->
-    <div class="w-full md:w-64 bg-gray-800 p-6">
-      <h1 class="text-2xl font-bold mb-6">⚔️ Sayfraial</h1>
-      <nav class="space-y-4">
-        <button onclick="showPage('dashboard')" class="w-full text-left" id="nav-dashboard">📊 Dashboard</button>
-        <button onclick="showPage('attack')" class="w-full text-left">🚀 Attack</button>
-        <button onclick="showPage('admin')" class="w-full text-left hidden" id="nav-admin">🛠️ Admin</button>
-        <button onclick="showPage('owner')" class="w-full text-left">👑 Owner</button>
-      </nav>
-    </div>
-
-    <!-- Main Content -->
-    <div class="flex-1 p-8">
-      <div id="dashboard" class="hidden">
-        <h2 class="text-3xl font-bold mb-4">📊 Dashboard</h2>
-        <p>Selamat datang di website stresser terbaik abad ini. Dibuat untuk melakukan testing performa situs Anda menggunakan protokol Layer 4 dan Layer 7. Cepat, efisien, dan profesional.</p>
-      </div>
-
-      <div id="attack" class="hidden">
-        <h2 class="text-3xl font-bold mb-4">🚀 Launch Attack</h2>
-        <div class="space-y-4">
-          <input type="text" id="target" placeholder="Target URL/IP" class="w-full p-2 bg-gray-700 rounded">
-          <input type="number" id="port" placeholder="Port" class="w-full p-2 bg-gray-700 rounded">
-          <input type="number" id="time" placeholder="Duration (seconds)" class="w-full p-2 bg-gray-700 rounded">
-
-          <select id="layer" onchange="loadMethods()" class="w-full p-2 bg-gray-700 rounded">
-            <option value="">-- Select Layer --</option>
-            <option value="layer4">L4</option>
-            <option value="layer7">L7</option>
-          </select>
-
-          <select id="method" class="w-full p-2 bg-gray-700 rounded">
-            <option>-- Method --</option>
-          </select>
-
-          <button onclick="launchAttack()" class="bg-red-600 px-4 py-2 rounded">🔥 Fire</button>
-          <pre id="result" class="mt-4 text-green-400"></pre>
-        </div>
-      </div>
-
-      <div id="admin" class="hidden">
-        <h2 class="text-3xl font-bold mb-4">🛠️ Admin Panel</h2>
-        <input id="newUser" placeholder="Username" class="w-full p-2 bg-gray-700 rounded mb-2">
-        <input id="newPass" placeholder="Password" class="w-full p-2 bg-gray-700 rounded mb-2">
-        <input id="conc" type="number" placeholder="Max Concurrents" class="w-full p-2 bg-gray-700 rounded mb-2">
-        <input id="days" type="number" placeholder="Active Days" class="w-full p-2 bg-gray-700 rounded mb-2">
-        <input id="maxTime" type="number" placeholder="Max Duration (sec)" class="w-full p-2 bg-gray-700 rounded mb-2">
-        <button onclick="createUser()" class="bg-blue-600 px-4 py-2 rounded">➕ Create User</button>
-        <p id="adminStatus" class="mt-4"></p>
-      </div>
-
-      <div id="owner" class="hidden">
-        <h2 class="text-3xl font-bold mb-4">👑 Owner</h2>
-        <p>Panel ini dikelola oleh <strong>Sayfraial</strong>, seorang developer penuh semangat dan berdedikasi.</p>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    const methods = {
-      layer4: ["udp", "dns", "tcp", "fivem", "minecraft", "ovh-amp", "vse"],
-      layer7: ["kalimasada", "tls", "trump", "tlsx", "bypass", "h2-blast", "https"]
-    };
-
-    let isAdmin = false;
-
-    function showPage(page) {
-      ['dashboard', 'attack', 'admin', 'owner'].forEach(p => {
-        document.getElementById(p).classList.add('hidden');
-      });
-      document.getElementById(page).classList.remove('hidden');
-    }
-
-    function loadMethods() {
-      const layer = document.getElementById('layer').value;
-      const methodSelect = document.getElementById('method');
-      methodSelect.innerHTML = '';
-      methods[layer]?.forEach(m => {
-        const opt = document.createElement('option');
-        opt.value = m;
-        opt.text = m.toUpperCase();
-        methodSelect.appendChild(opt);
-      });
-    }
-
-    function launchAttack() {
-      const data = {
-        target: document.getElementById('target').value,
-        port: document.getElementById('port').value,
-        time: document.getElementById('time').value,
-        method: document.getElementById('method').value
-      };
-      axios.post('http://localhost:3000/api/attack', data)
-        .then(res => {
-          document.getElementById('result').textContent = JSON.stringify(res.data);
-        }).catch(err => {
-          document.getElementById('result').textContent = '❌ Error: ' + (err.response?.data?.error || err.message);
-        });
-    }
-
-    function createUser() {
-      const data = {
-        adminUser: '1',
-        adminPass: '1',
-        newUser: document.getElementById('newUser').value,
-        newPass: document.getElementById('newPass').value,
-        conc: document.getElementById('conc').value,
-        days: document.getElementById('days').value,
-        maxTime: document.getElementById('maxTime').value
-      };
-      axios.post('http://localhost:3000/api/create-user', data)
-        .then(res => {
-          document.getElementById('adminStatus').textContent = '✅ User created!';
-        }).catch(err => {
-          document.getElementById('adminStatus').textContent = '❌ Error: ' + (err.response?.data?.message || err.message);
-        });
-    }
-
-    function login() {
-      const user = document.getElementById('loginUser').value;
-      const pass = document.getElementById('loginPass').value;
-      axios.post('http://localhost:3000/api/login', { user, pass })
-        .then(res => {
-          isAdmin = res.data.isAdmin;
-          document.getElementById('loginPage').classList.add('hidden');
-          document.getElementById('mainApp').classList.remove('hidden');
-          if (isAdmin) {
-            document.getElementById('nav-admin').classList.remove('hidden');
-            document.getElementById('nav-dashboard').classList.remove('hidden');
-          } else {
-            document.getElementById('nav-admin').classList.add('hidden');
-            document.getElementById('nav-dashboard').classList.add('hidden');
-          }
-          showPage('attack');
-        })
-        .catch(err => {
-          document.getElementById('loginStatus').textContent = '❌ Login gagal';
-        });
-    }
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>
